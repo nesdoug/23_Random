@@ -27,7 +27,6 @@
 	.import		_seed_rng
 	.export		_metasprite
 	.export		_metasprite2
-	.export		_sprid
 	.export		_pad1
 	.export		_start_pressed
 	.export		_index
@@ -128,8 +127,6 @@ _palette_sp:
 .segment	"BSS"
 
 .segment	"ZEROPAGE"
-_sprid:
-	.res	1,$00
 _pad1:
 	.res	1,$00
 _start_pressed:
@@ -201,20 +198,16 @@ L0068:	jsr     _ppu_wait_nmi
 ;
 	jsr     _oam_clear
 ;
-; sprid = 0;
-;
-	lda     #$00
-	sta     _sprid
-;
 ; pad1 = pad_poll(0); // read the first controller
 ;
+	lda     #$00
 	jsr     _pad_poll
 	sta     _pad1
 ;
 ; if(!start_pressed){
 ;
 	lda     _start_pressed
-	bne     L0073
+	bne     L0071
 ;
 ; if(pad1 & PAD_START){
 ;
@@ -234,7 +227,7 @@ L0068:	jsr     _ppu_wait_nmi
 ;
 	lda     #$00
 	sta     _index
-L00D6:	lda     _index
+L00CE:	lda     _index
 	cmp     #$40
 	bcs     L0068
 ;
@@ -244,9 +237,9 @@ L00D6:	lda     _index
 	ldx     #>(_spr_x)
 	clc
 	adc     _index
-	bcc     L0083
+	bcc     L0081
 	inx
-L0083:	jsr     pushax
+L0081:	jsr     pushax
 	jsr     _rand8
 	ldy     #$00
 	jsr     staspidx
@@ -257,9 +250,9 @@ L0083:	jsr     pushax
 	ldx     #>(_spr_y)
 	clc
 	adc     _index
-	bcc     L0087
+	bcc     L0085
 	inx
-L0087:	jsr     pushax
+L0085:	jsr     pushax
 	jsr     _rand8
 	ldy     #$00
 	jsr     staspidx
@@ -267,21 +260,21 @@ L0087:	jsr     pushax
 ; for(index=0;index<64;++index){
 ;
 	inc     _index
-	jmp     L00D6
+	jmp     L00CE
 ;
 ; for(index=0;index<25;++index){
 ;
-L0073:	lda     #$00
+L0071:	lda     #$00
 	sta     _index
-L00D7:	lda     _index
+L00CF:	lda     _index
 	cmp     #$19
-	bcs     L00D8
+	bcs     L00D0
 ;
 ; if(get_frame_count() & 1){ // half the time
 ;
 	jsr     _get_frame_count
 	and     #$01
-	beq     L0092
+	beq     L0090
 ;
 ; spr_y[index] = spr_y[index] + 1; // fall
 ;
@@ -289,9 +282,9 @@ L00D7:	lda     _index
 	ldx     #>(_spr_y)
 	clc
 	adc     _index
-	bcc     L0096
+	bcc     L0094
 	inx
-L0096:	sta     ptr1
+L0094:	sta     ptr1
 	stx     ptr1+1
 	ldy     _index
 	lda     _spr_y,y
@@ -300,36 +293,32 @@ L0096:	sta     ptr1
 	ldy     #$00
 	sta     (ptr1),y
 ;
-; sprid = oam_spr(spr_x[index], spr_y[index], 0, 0, sprid);
+; oam_spr(spr_x[index], spr_y[index], 0, 0);
 ;
-L0092:	jsr     decsp4
+L0090:	jsr     decsp3
 	ldy     _index
 	lda     _spr_x,y
-	ldy     #$03
+	ldy     #$02
 	sta     (sp),y
 	ldy     _index
 	lda     _spr_y,y
-	ldy     #$02
+	ldy     #$01
 	sta     (sp),y
 	lda     #$00
 	dey
 	sta     (sp),y
-	dey
-	sta     (sp),y
-	lda     _sprid
 	jsr     _oam_spr
-	sta     _sprid
 ;
 ; for(index=0;index<25;++index){
 ;
 	inc     _index
-	jmp     L00D7
+	jmp     L00CF
 ;
 ; for( ;index<55;++index){
 ;
-L00D8:	lda     _index
+L00D0:	lda     _index
 	cmp     #$37
-	bcs     L00D9
+	bcs     L00D1
 ;
 ; spr_y[index] = spr_y[index] + 1; // fall
 ;
@@ -337,9 +326,9 @@ L00D8:	lda     _index
 	ldx     #>(_spr_y)
 	clc
 	adc     _index
-	bcc     L00AE
+	bcc     L00AA
 	inx
-L00AE:	sta     ptr1
+L00AA:	sta     ptr1
 	stx     ptr1+1
 	ldy     _index
 	lda     _spr_y,y
@@ -348,34 +337,30 @@ L00AE:	sta     ptr1
 	ldy     #$00
 	sta     (ptr1),y
 ;
-; sprid = oam_spr(spr_x[index], spr_y[index], 0, 0, sprid);
+; oam_spr(spr_x[index], spr_y[index], 0, 0);
 ;
-	jsr     decsp4
+	jsr     decsp3
 	ldy     _index
 	lda     _spr_x,y
-	ldy     #$03
+	ldy     #$02
 	sta     (sp),y
 	ldy     _index
 	lda     _spr_y,y
-	ldy     #$02
+	ldy     #$01
 	sta     (sp),y
 	lda     #$00
 	dey
 	sta     (sp),y
-	dey
-	sta     (sp),y
-	lda     _sprid
 	jsr     _oam_spr
-	sta     _sprid
 ;
 ; for( ;index<55;++index){
 ;
 	inc     _index
-	jmp     L00D8
+	jmp     L00D0
 ;
 ; for( ;index<64;++index){
 ;
-L00D9:	lda     _index
+L00D1:	lda     _index
 	cmp     #$40
 	jcs     L0068
 ;
@@ -385,9 +370,9 @@ L00D9:	lda     _index
 	ldx     #>(_spr_y)
 	clc
 	adc     _index
-	bcc     L00C6
+	bcc     L00C0
 	inx
-L00C6:	sta     ptr1
+L00C0:	sta     ptr1
 	stx     ptr1+1
 	ldy     _index
 	lda     _spr_y,y
@@ -396,30 +381,26 @@ L00C6:	sta     ptr1
 	ldy     #$00
 	sta     (ptr1),y
 ;
-; sprid = oam_spr(spr_x[index], spr_y[index], 0, 0, sprid);
+; oam_spr(spr_x[index], spr_y[index], 0, 0);
 ;
-	jsr     decsp4
+	jsr     decsp3
 	ldy     _index
 	lda     _spr_x,y
-	ldy     #$03
+	ldy     #$02
 	sta     (sp),y
 	ldy     _index
 	lda     _spr_y,y
-	ldy     #$02
+	ldy     #$01
 	sta     (sp),y
 	lda     #$00
 	dey
 	sta     (sp),y
-	dey
-	sta     (sp),y
-	lda     _sprid
 	jsr     _oam_spr
-	sta     _sprid
 ;
 ; for( ;index<64;++index){
 ;
 	inc     _index
-	jmp     L00D9
+	jmp     L00D1
 
 .endproc
 

@@ -15,7 +15,6 @@
 #pragma bss-name(push, "ZEROPAGE")
 
 // GLOBAL VARIABLES
-unsigned char sprid; // remember the index into the sprite buffer
 unsigned char pad1;
 unsigned char start_pressed;
 unsigned char index;
@@ -78,7 +77,6 @@ void main (void) {
 		// the sprites are pushed from a buffer to the OAM during nmi
 		
 		oam_clear();
-		sprid = 0;
 		
 		pad1 = pad_poll(0); // read the first controller
 		if(!start_pressed){
@@ -96,15 +94,15 @@ void main (void) {
 				if(get_frame_count() & 1){ // half the time
 					spr_y[index] = spr_y[index] + 1; // fall
 				}
-				sprid = oam_spr(spr_x[index], spr_y[index], 0, 0, sprid);
+				oam_spr(spr_x[index], spr_y[index], 0, 0);
 			}
 			for( ;index<55;++index){
 				spr_y[index] = spr_y[index] + 1; // fall
-				sprid = oam_spr(spr_x[index], spr_y[index], 0, 0, sprid);
+				oam_spr(spr_x[index], spr_y[index], 0, 0);
 			}
 			for( ;index<64;++index){
 				spr_y[index] = spr_y[index] + 2; // fall fast
-				sprid = oam_spr(spr_x[index], spr_y[index], 0, 0, sprid);
+				oam_spr(spr_x[index], spr_y[index], 0, 0);
 			}
 		}
 	}
